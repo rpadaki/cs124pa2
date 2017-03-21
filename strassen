@@ -1,0 +1,4 @@
+#!/bin/bash
+javac MatrixMultiply.java
+java MatrixMultiply $1 $2 $3
+rm *.class
