@@ -8,21 +8,33 @@ public class MatrixMultiply {
 		// Matrix dimension
 		int n=parseInt(args[1]);
 
+		// Initialize crossover
+		int crosover;
+
 		// Testing to make sure that
 		// padding was working as desired
 		if (flag == 3) {
-			int crossover = parseInt(args[2]);
+			crossover = parseInt(args[2]);
 			System.out.println(pad(n,crossover));
 			return;
 		}
 
-		// We set the crossover point here
-		int crossover;
+		// We set the crossover here.
+		crossover = 15;
+
+		// Manually set crossover for testing
+		// with random matrices.
+		if (flag == 4) {
+			crossover = parseInt(args[4]);
+		}
+
 		
+		// Determine buffer
+		int m = pad(n,crossover);
 
 		// Initialize matrices
-		int[][] a = new int[n][n];
-		int[][] b = new int[n][n];
+		int[][] a = new int[m][m];
+		int[][] b = new int[m][m];
 
 		// Get matrices from input file
 		if (flag == 0) {
@@ -46,13 +58,20 @@ public class MatrixMultiply {
 			}
 		}
 		// Randomly generate matrices
-		else if (flag == 1) {
+		else if (flag == 1 || flag == 4) {
 			int min = parseInt(args[2]);
 			int max = parseInt(args[3]);
 			randMatrix(n,min,max,a);
 			randMatrix(n,min,max,b);
 		}
-
+		// Fill in the rest of a and b with
+		// 1s on the diagonal. This makes
+		// multiplication of padded matrices
+		// work as desired.
+		for (int i = n; i < m; i++) {
+			a[i][i] = 1;
+			b[i][i] = 1;
+		}
 	}
 
 	// Generate a random matrix and store it in c
