@@ -54,6 +54,16 @@ public class MatrixMultiply {
 		}
 	}
 
+	// fills in matrices arraylist
+	// should be first called with len=n
+	public static void makeMatrices(ArrayList<int[][][]> matrices, int len, int crossover) {
+		if (len <= crossover) {
+			return;
+		}
+		matrices.add(new int[5][len/2][len/2]);
+		makeMatrices(matrices, len/2, crossover);
+	}
+
 	// Add a len x len submatrix of a to
 	// a submatrix of b and store in c
 	public static void add(int[][] a, int[][] b, int[][] c,int ai, int aj, int bi, int bj, int ci, int cj, int len) {
@@ -105,6 +115,7 @@ public class MatrixMultiply {
 			return;
 		}
 
+		//depth 0 corresponds to n/2, etc
 		m = Matrices.get(depth);
 
 		// p6
