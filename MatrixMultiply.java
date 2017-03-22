@@ -33,8 +33,8 @@ public class MatrixMultiply {
 		int m = pad(n,crossover);
 
 		// Initialize matrices
-		int[][] a = new int[m][m];
-		int[][] b = new int[m][m];
+		long[][] a = new long[m][m];
+		long[][] b = new long[m][m];
 
 		// Get matrices from input file
 		if (flag == 0) {
@@ -73,14 +73,15 @@ public class MatrixMultiply {
 			b[i][i] = 1;
 		}
 
-		int[][] c = new int[m][m];
-		int[][] d = new int[m][m];
+		long[][] c = new long[m][m];
+		long[][] d = new long[m][m];
 
-		ArrayList<int[][][]> matrices = new ArrayList<int[][][]>();
+		ArrayList<long[][][]> matrices = new ArrayList<long[][][]>();
 		makeMatrices(matrices, m, crossover);
-		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
 		regMult(a, b, d, 0, 0, 0, 0, 0, 0, n);
-		System.out.println(n + " padded to " + m);
+		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
+		
+		System.out.println("Comparison");
 		System.out.println("------------------");
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j<n; j++) System.out.println(i + "," + j + ":   " + c[i][j] + " " + d[i][j]);
@@ -88,7 +89,7 @@ public class MatrixMultiply {
 	}
 
 	// Generate a random matrix and store it in c
-	public static void randMatrix(int n, int min, int max, int[][] c) {
+	public static void randMatrix(int n, int min, int max, long[][] c) {
 		Random rng = new Random();
 		int range = max-min+1;
 		for (int i = 0; i < n; i++) {
@@ -113,17 +114,17 @@ public class MatrixMultiply {
 
 	// fills in matrices arraylist
 	// should be first called with len=n
-	public static void makeMatrices(ArrayList<int[][][]> matrices, int len, int crossover) {
+	public static void makeMatrices(ArrayList<long[][][]> matrices, int len, int crossover) {
 		if (len <= crossover) {
 			return;
 		}
-		matrices.add(new int[5][len/2][len/2]);
+		matrices.add(new long[5][len/2][len/2]);
 		makeMatrices(matrices, len/2, crossover);
 	}
 
 	// Add a len x len submatrix of a to
 	// a submatrix of b and store in c
-	public static void add(int[][] a, int[][] b, int[][] c,int ai, int aj, int bi, int bj, int ci, int cj, int len) {
+	public static void add(long[][] a, long[][] b, long[][] c,int ai, int aj, int bi, int bj, int ci, int cj, int len) {
 		for (int i = 0; i < len; i++) {
 			for (int j = 0; j < len; j++) {
 				c[i+ci][j+cj] = a[i+ai][j+aj] + b[i+bi][j+bj];
@@ -134,7 +135,7 @@ public class MatrixMultiply {
 	// Subtract a len x len submatrix of a
 	// from a submatrix of b and store in a
 	// submatrix of c
-	public static void sub(int[][] a, int[][] b, int[][] c,int ai, int aj, int bi, int bj, int ci, int cj, int len) {
+	public static void sub(long[][] a, long[][] b, long[][] c,int ai, int aj, int bi, int bj, int ci, int cj, int len) {
 		for (int i = 0; i < len; i++) {
 			for (int j = 0; j < len; j++) {
 				c[i+ci][j+cj] = a[i+ai][j+aj] - b[i+bi][j+bj];
@@ -145,7 +146,7 @@ public class MatrixMultiply {
 	// Multiply a len x len submatrix of a
 	// by a submatrix of b and store in a 
 	// submatrix of c with the classic method.
-	public static void regMult(int[][] a, int[][] b, int[][] c, int ai, int aj, int bi, int bj, int ci, int cj, int len) {
+	public static void regMult(long[][] a, long[][] b, long[][] c, int ai, int aj, int bi, int bj, int ci, int cj, int len) {
 		for (int i = 0; i < len; i++) {
 			for (int j = 0; j < len; j++) {
 				c[i+ci][j+cj] = 0;
@@ -158,7 +159,7 @@ public class MatrixMultiply {
 
 	// Move a len x len submatrix of a to
 	// a submatrix of c
-	public static void move(int[][] a, int[][] c, int ai, int aj, int ci, int cj, int len) {
+	public static void move(long[][] a, long[][] c, int ai, int aj, int ci, int cj, int len) {
 		for (int i = 0; i < len; i++) {
 			for (int j = 0; j < len; j++) {
 				c[i+ci][j+cj] = a[i+ai][j+aj];
@@ -166,14 +167,16 @@ public class MatrixMultiply {
 		}
 	}
 
-	public static void strassen(int[][] a, int[][] b, int[][] c, ArrayList<int[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
+	public static void strassen(long[][] a, long[][] b, long[][] c, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
 		if (len <= crossover) {
 			regMult(a, b, c, ai, aj, bi, bj, ci, cj, len);
 			return;
 		}
+		long[][] d = new long[len][len];
+		regMult(a,b,d,ai,aj,bi,bj,0,0,len);
 
 		//depth 0 corresponds to n/2, etc
-		int[][][] m = matrices.get(depth);
+		long[][][] m = matrices.get(depth);
 
 		// p6
 		// B - D goes in m0
@@ -181,13 +184,13 @@ public class MatrixMultiply {
 		// G + H goes in m1
 		add(b, b, m[1], bi+len/2, bj, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m2
-		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth + 1);
+		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//p2
 		// A+B goes in m0
 		add(a, a, m[0], ai, aj, ai, aj + len/2, 0, 0, len/2);
 		// multiply goes in m1
-		strassen(m[0], b, m[1], matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth + 1);
+		strassen(m[0], b, m[1], matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth+1);
 		//p4
 		// G-E goes in m0
 		sub(b, b, m[0], bi + len/2, bj, bi, bj, 0, 0, len/2);
@@ -261,6 +264,11 @@ public class MatrixMultiply {
 		sub(m[4], b, m[4], 0, 0, bi, bj+len/2, 0, 0, len/2);
 		//subtract p7
 		sub(m[4], m[2], c, 0, 0, 0, 0, ci+len/2, cj+len/2, len/2);
+		System.out.println("Comparison");
+		System.out.println("------------------");
+		for (int i = 0; i < len; i++) {
+			for (int j = 0; j<len; j++) System.out.println(i + "," + j + ":   " + c[i][j] + " " + d[i][j]);
+		}
 	}
 
 	public static int parseInt(String s) {
