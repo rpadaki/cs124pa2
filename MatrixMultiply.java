@@ -77,6 +77,15 @@ public class MatrixMultiply {
 			crossover = crossover-1;
 		}
 		return (crossover + 1)*m;
+
+	// fills in matrices arraylist
+	// should be first called with len=n
+	public static void makeMatrices(ArrayList<int[][][]> matrices, int len, int crossover) {
+		if (len <= crossover) {
+			return;
+		}
+		matrices.add(new int[5][len/2][len/2]);
+		makeMatrices(matrices, len/2, crossover);
 	}
 
 	// Add a len x len submatrix of a to
@@ -130,6 +139,7 @@ public class MatrixMultiply {
 			return;
 		}
 
+		//depth 0 corresponds to n/2, etc
 		m = matrices.get(depth);
 
 		// p6
