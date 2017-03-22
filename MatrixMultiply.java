@@ -224,9 +224,9 @@ public class MatrixMultiply {
 
 		//p5
 		//A+D goes in m0
-		add(a, a, m[0], 0, 0, ai+len/2, aj+len/2, 0, 0, len/2);
+		add(a, a, m[0], ai, aj, ai+len/2, aj+len/2, 0, 0, len/2);
 		//E+H goes in m1
-		add(b, b, m[1], 0, 0, bi+len/2, bj+len/2, 0, 0, len/2);
+		add(b, b, m[1], bi, bj, bi+len/2, bj+len/2, 0, 0, len/2);
 		//multiply goes in m4
 		strassen(m[0], m[1], m[4], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p1 is in C's spot
