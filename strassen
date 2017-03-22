@@ -1,2 +1,2 @@
 #!/bin/bash
-java MatrixMultiply $1 $2 $3
+java MatrixMultiply "$@"

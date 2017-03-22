@@ -9,7 +9,7 @@ public class MatrixMultiply {
 		int n=parseInt(args[1]);
 
 		// Initialize crossover
-		int crosover;
+		int crossover;
 
 		// Testing to make sure that
 		// padding was working as desired
@@ -80,8 +80,10 @@ public class MatrixMultiply {
 		makeMatrices(matrices, m, crossover);
 		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
 		regMult(a, b, d, 0, 0, 0, 0, 0, 0, n);
+		System.out.println(n + " padded to " + m);
+		System.out.println("------------------");
 		for (int i = 0; i < n; i++) {
-			System.out.println(c[i][i] + " " + d[i][i]);
+			for (int j = 0; j<n; j++) System.out.println(i + "," + j + ":   " + c[i][j] + " " + d[i][j]);
 		}
 	}
 
@@ -107,6 +109,7 @@ public class MatrixMultiply {
 			crossover = crossover-1;
 		}
 		return (crossover + 1)*m;
+	}
 
 	// fills in matrices arraylist
 	// should be first called with len=n
@@ -158,7 +161,7 @@ public class MatrixMultiply {
 	public static void move(int[][] a, int[][] c, int ai, int aj, int ci, int cj, int len) {
 		for (int i = 0; i < len; i++) {
 			for (int j = 0; j < len; j++) {
-				c[i+ci][j+cj] = a[i+ai][j+cj];
+				c[i+ci][j+cj] = a[i+ai][j+aj];
 			}
 		}
 	}
@@ -173,16 +176,16 @@ public class MatrixMultiply {
 		int[][][] m = matrices.get(depth);
 
 		// p6
-		// B - D goes i m0
-		sub(a, a, m[0], ai + len/2, aj, ai+len/2, aj+len/2, 0, 0, len/2);
+		// B - D goes in m0
+		sub(a, a, m[0], ai, aj + len/2, ai+len/2, aj+len/2, 0, 0, len/2);
 		// G + H goes in m1
-		add(b, b, m[1], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
+		add(b, b, m[1], bi+len/2, bj, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m2
 		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth + 1);
 
 		//p2
 		// A+B goes in m0
-		add(a, a, m[0], ai, aj, ai + len/2, aj, 0, 0, len/2);
+		add(a, a, m[0], ai, aj, ai, aj + len/2, 0, 0, len/2);
 		// multiply goes in m1
 		strassen(m[0], b, m[1], matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth + 1);
 		//p4
@@ -202,7 +205,7 @@ public class MatrixMultiply {
 		//E+F goes in m1
 		add(b, b, m[1], bi, bj, bi, bj+len/2, 0, 0, len/2);
 		//multiply goes in m2
-		strassen(m[0], m[1], m[2m, Matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p1
 		//F-H goes in m0
 		sub(b, b, m[0], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
@@ -225,7 +228,7 @@ public class MatrixMultiply {
 		//E+H goes in m1
 		add(b, b, m[1], 0, 0, bi+len/2, bj+len/2, 0, 0, len/2);
 		//multiply goes in m4
-		strassen(m[0], m[1], m[4m, Matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], m[1], m[4], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p1 is in C's spot
 		//p2 is in G's spot
 		//p3 is in F's spot
