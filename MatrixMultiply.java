@@ -116,7 +116,7 @@ public class MatrixMultiply {
 		}
 
 		//depth 0 corresponds to n/2, etc
-		m = Matrices.get(depth);
+		int[][][] m = Matrices.get(depth);
 
 		// p6
 		// B - D goes i m0
@@ -124,19 +124,19 @@ public class MatrixMultiply {
 		// G + H goes in m1
 		add(b, b, m[1], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m2
-		strassen(m[0], m[1], m[2], Matrices, 0, 0, 0, 0, 0, 0, len/2, depth + 1);
+		strassen(m[0], m[1], m[2], Matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth + 1);
 
 		//p2
 		// A+B goes in m0
 		add(a, a, m[0], ai, aj, ai + len/2, aj, 0, 0, len/2);
 		// multiply goes in m1
-		strassen(m[0], b, m[1], Matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, depth + 1);
+		strassen(m[0], b, m[1], Matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth + 1);
 
 		//p4
 		// G-E goes in m0
 		sub(b, b, m[0], bi + len/2, bj, bi, bj, 0, 0, len/2);
 		// multiply goes in m3
-		strassen(a, m[0], m[3], Matrices, ai+len/2, aj+len/2, 0, 0, 0, 0, len/2, depth+1);
+		strassen(a, m[0], m[3], Matrices, ai+len/2, aj+len/2, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//now we don't need B or G
 		//p6 moves to B's spot
@@ -146,23 +146,23 @@ public class MatrixMultiply {
 
 		//p7
 		//A-C goes in m0
-		sub(a, a, m[0], ai, aj, ai+len/2, aj, len/2);
+		sub(a, a, m[0], ai, aj, ai+len/2, aj, 0, 0, len/2);
 		//E+F goes in m1
-		add(b, b, m[1], bi, bj, bi, bj+len/2, len/2);
+		add(b, b, m[1], bi, bj, bi, bj+len/2, 0, 0, len/2);
 		//multiply goes in m2
-		strassen(m[0], m[1], m[2], Matrices, 0, 0, 0, 0, 0, 0, len/2, depth+1);
+		strassen(m[0], m[1], m[2], Matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//p1
 		//F-H goes in m0
 		sub(b, b, m[0], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m1
-		strassen(a, m[0], m[1], Matrices, ai, aj, 0, 0, 0, 0, len/2, depth+1);
+		strassen(a, m[0], m[1], Matrices, ai, aj, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//p3
 		//C+D goes in m0
-		add(a, a, m[0], ai+len/2, aj, ai+len/2, aj+len/2, len/2);
+		add(a, a, m[0], ai+len/2, aj, ai+len/2, aj+len/2, 0, 0, len/2);
 		//multiply goes in m4
-		strassen(m[0], b, m[4], Matrices, 0, 0, bi, bj, 0, 0, len/2, depth+1);
+		strassen(m[0], b, m[4], Matrices, 0, 0, bi, bj, 0, 0, len/2, crossover, depth+1);
 
 		//now we don't need C or F
 		//p1 goes in C's spot
@@ -176,7 +176,7 @@ public class MatrixMultiply {
 		//E+H goes in m1
 		add(b, b, m[1], 0, 0, bi+len/2, bj+len/2, 0, 0, len/2);
 		//multiply goes in m4
-		strassen(m[0], m[1], m[4], Matrices, 0, 0, 0, 0, 0, 0, len/2, depth+1);
+		strassen(m[0], m[1], m[4], Matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//p1 is in C's spot
 		//p2 is in G's spot
@@ -211,7 +211,7 @@ public class MatrixMultiply {
 		//subtract p7
 		sub(m[4], m[2], c, 0, 0, 0, 0, ci+len/2, cj+len/2, len/2);
 	}
-}
+
 
 	public static int parseInt(String s) {
 		try {
