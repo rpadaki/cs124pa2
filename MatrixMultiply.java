@@ -79,7 +79,7 @@ public class MatrixMultiply {
 		ArrayList<long[][][]> matrices = new ArrayList<long[][][]>();
 		makeMatrices(matrices, m, crossover);
 		regMult(a, b, d, 0, 0, 0, 0, 0, 0, n);
-		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
+		strassen(a, b, c, new long[m][m], new long[m][m], matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
 		
 		System.out.println("Comparison");
 		System.out.println("------------------");
@@ -167,13 +167,14 @@ public class MatrixMultiply {
 		}
 	}
 
-	public static void strassen(long[][] a, long[][] b, long[][] c, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
+	public static void strassen(long[][] a, long[][] b, long[][] c, long[][] s1, long[][] s2, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
 		if (len <= crossover) {
 			regMult(a, b, c, ai, aj, bi, bj, ci, cj, len);
 			return;
 		}
-		long[][] d = new long[len][len];
-		regMult(a,b,d,ai,aj,bi,bj,0,0,len);
+		//save our arrays
+		move(a, s1, 0, 0, 0, 0, len);
+		move(b, s2, 0, 0, 0, 0, len);
 
 		//depth 0 corresponds to n/2, etc
 		long[][][] m = matrices.get(depth);
@@ -184,18 +185,18 @@ public class MatrixMultiply {
 		// G + H goes in m1
 		add(b, b, m[1], bi+len/2, bj, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m2
-		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], m[1], m[2], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 
 		//p2
 		// A+B goes in m0
 		add(a, a, m[0], ai, aj, ai, aj + len/2, 0, 0, len/2);
 		// multiply goes in m1
-		strassen(m[0], b, m[1], matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], b, m[1], s1, s2, matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth+1);
 		//p4
 		// G-E goes in m0
 		sub(b, b, m[0], bi + len/2, bj, bi, bj, 0, 0, len/2);
 		// multiply goes in m3
-		strassen(a, m[0], m[3], matrices, ai+len/2, aj+len/2, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(a, m[0], m[3], s1, s2, matrices, ai+len/2, aj+len/2, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//now we don't need B or G
 		//p6 moves to B's spot
 		move(m[2], a, 0, 0, ai, aj+len/2, len/2);
@@ -208,17 +209,17 @@ public class MatrixMultiply {
 		//E+F goes in m1
 		add(b, b, m[1], bi, bj, bi, bj+len/2, 0, 0, len/2);
 		//multiply goes in m2
-		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], m[1], m[2], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p1
 		//F-H goes in m0
 		sub(b, b, m[0], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
 		// multiply goes in m1
-		strassen(a, m[0], m[1], matrices, ai, aj, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(a, m[0], m[1], s1, s2, matrices, ai, aj, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p3
 		//C+D goes in m0
 		add(a, a, m[0], ai+len/2, aj, ai+len/2, aj+len/2, 0, 0, len/2);
 		//multiply goes in m4
-		strassen(m[0], b, m[4], matrices, 0, 0, bi, bj, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], b, m[4], s1, s2, matrices, 0, 0, bi, bj, 0, 0, len/2, crossover, depth+1);
 		//now we don't need C or F
 		//p1 goes in C's spot
 		move(m[1], a, 0, 0, ai+len/2, aj, len/2);
@@ -231,7 +232,7 @@ public class MatrixMultiply {
 		//E+H goes in m1
 		add(b, b, m[1], bi, bj, bi+len/2, bj+len/2, 0, 0, len/2);
 		//multiply goes in m4
-		strassen(m[0], m[1], m[4], matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		strassen(m[0], m[1], m[4], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
 		//p1 is in C's spot
 		//p2 is in G's spot
 		//p3 is in F's spot
@@ -264,11 +265,10 @@ public class MatrixMultiply {
 		sub(m[4], b, m[4], 0, 0, bi, bj+len/2, 0, 0, len/2);
 		//subtract p7
 		sub(m[4], m[2], c, 0, 0, 0, 0, ci+len/2, cj+len/2, len/2);
-		System.out.println("Comparison");
-		System.out.println("------------------");
-		for (int i = 0; i < len; i++) {
-			for (int j = 0; j<len; j++) System.out.println(i + "," + j + ":   " + c[i][j] + " " + d[i][j]);
-		}
+
+		//restore our arrays
+		move(s1, a, 0, 0, 0, 0, len);
+		move(s2, a, 0, 0, 0, 0, len);
 	}
 
 	public static int parseInt(String s) {
