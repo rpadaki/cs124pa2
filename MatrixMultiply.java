@@ -72,6 +72,17 @@ public class MatrixMultiply {
 			a[i][i] = 1;
 			b[i][i] = 1;
 		}
+
+		int[][] c = new int[m][m];
+		int[][] d = new int[m][m];
+
+		ArrayList<int[][][]> matrices = new ArrayList<int[][][]>();
+		makeMatrices(matrices, m, crossover);
+		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
+		regMult(a, b, d, 0, 0, 0, 0, 0, 0, n);
+		for (int i = 0; i < n; i++) {
+			System.out.println(c[i][i] + " " + d[i][i]);
+		}
 	}
 
 	// Generate a random matrix and store it in c
