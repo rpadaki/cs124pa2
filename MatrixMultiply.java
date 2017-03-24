@@ -27,8 +27,19 @@ public class MatrixMultiply {
 		if (flag == 4) {
 			crossover = parseInt(args[4]);
 		}
+		if (flag == 5) {
+			crossover = parseInt(args[3]);
+		}
+		for (crossover = 8; crossover < 1025; crossover += 1) {
+			long total = 0;
+			for (int k = 0; k < 1; k++) {
+				total += timeMultiply(flag, n, crossover, args);
+			}
+			System.out.println(crossover + " " + total);
+		}
+	}
 
-		
+	public static long timeMultiply(int flag, int n, int crossover, String[] args) {
 		// Determine buffer
 		int m = pad(n,crossover);
 
@@ -37,25 +48,10 @@ public class MatrixMultiply {
 		long[][] b = new long[m][m];
 
 		// Get matrices from input file
-		if (flag == 0) {
+		if (flag == 0 || flag == 5) {
 			// Input filename
 			String inputfile = args[2];
-			try {
-				BufferedReader in = new BufferedReader(new FileReader(inputfile));
-				for (int i=0; i<n; i++) {
-					for (int j=0; j<n; j++) {
-						a[i][j] = parseInt(in.readLine());
-					}
-				}
-				for (int i=0; i<n; i++) {
-					for (int j=0; j<n; j++) {
-						b[i][j] = parseInt(in.readLine());
-					}
-				}
-			} catch (IOException e) {
-				System.out.println("Error: Incorrect input format.");
-				System.exit(0);
-			}
+			setMatricesFromFile(a,b,n,inputfile);
 		}
 		// Randomly generate matrices
 		else if (flag == 1 || flag == 4) {
@@ -74,17 +70,31 @@ public class MatrixMultiply {
 		}
 
 		long[][] c = new long[m][m];
-		long[][] d = new long[m][m];
 
 		ArrayList<long[][][]> matrices = new ArrayList<long[][][]>();
 		makeMatrices(matrices, m, crossover);
-		regMult(a, b, d, 0, 0, 0, 0, 0, 0, n);
-		strassen(a, b, c, new long[m][m], new long[m][m], matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
-		
-		System.out.println("Comparison");
-		System.out.println("------------------");
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j<n; j++) System.out.println(i + "," + j + ":   " + c[i][j] + " " + d[i][j]);
+		long start = System.currentTimeMillis();
+		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
+		long end = System.currentTimeMillis();
+		return end-start;
+	}
+
+	public static void setMatricesFromFile(long[][] a, long[][] b, int n, String inputfile) {
+		try {
+			BufferedReader in = new BufferedReader(new FileReader(inputfile));
+			for (int i=0; i<n; i++) {
+				for (int j=0; j<n; j++) {
+					a[i][j] = parseInt(in.readLine());
+				}
+			}
+			for (int i=0; i<n; i++) {
+				for (int j=0; j<n; j++) {
+					b[i][j] = parseInt(in.readLine());
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("Error: Incorrect input format.");
+			System.exit(0);
 		}
 	}
 
@@ -118,7 +128,7 @@ public class MatrixMultiply {
 		if (len <= crossover) {
 			return;
 		}
-		matrices.add(new long[5][len/2][len/2]);
+		matrices.add(new long[7][len/2][len/2]);
 		makeMatrices(matrices, len/2, crossover);
 	}
 
@@ -167,72 +177,97 @@ public class MatrixMultiply {
 		}
 	}
 
-	public static void strassen(long[][] a, long[][] b, long[][] c, long[][] s1, long[][] s2, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
+	public static void strassen(long[][] a, long[][] b, long[][] c, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
 		if (len <= crossover) {
 			regMult(a, b, c, ai, aj, bi, bj, ci, cj, len);
 			return;
 		}
-		//save our arrays
-		move(a, s1, 0, 0, 0, 0, len);
-		move(b, s2, 0, 0, 0, 0, len);
 
 		//depth 0 corresponds to n/2, etc
 		long[][][] m = matrices.get(depth);
-
+		int hl = len/2;
 		// p6
 		// B - D goes in m0
-		sub(a, a, m[0], ai, aj + len/2, ai+len/2, aj+len/2, 0, 0, len/2);
+		sub(a, a, m[0], ai, aj + hl, ai+hl, aj+hl, 0, 0, hl);
 		// G + H goes in m1
-		add(b, b, m[1], bi+len/2, bj, bi+len/2, bj+len/2, 0, 0, len/2);
+		add(b, b, m[1], bi+hl, bj, bi+hl, bj+hl, 0, 0, hl);
 		// multiply goes in m2
-		strassen(m[0], m[1], m[2], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		move(m[0], m[5], 0, 0, 0, 0, hl);
+		move(m[1], m[6], 0, 0, 0, 0, hl);
+		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
+		move(m[5], m[0], 0, 0, 0, 0, hl);
+		move(m[6], m[1], 0, 0, 0, 0, hl);
 
 		//p2
 		// A+B goes in m0
-		add(a, a, m[0], ai, aj, ai, aj + len/2, 0, 0, len/2);
+		add(a, a, m[0], ai, aj, ai, aj + hl, 0, 0, hl);
 		// multiply goes in m1
-		strassen(m[0], b, m[1], s1, s2, matrices, 0, 0, bi+len/2, bj+len/2, 0, 0, len/2, crossover, depth+1);
+		move(m[0], m[5], 0, 0, 0, 0, hl);
+		move(b, m[6], bi+hl, bj+hl, 0, 0, hl);
+		strassen(m[0], b, m[1], matrices, 0, 0, bi+hl, bj+hl, 0, 0, hl, crossover, depth+1);
+		move(m[5], m[0], 0, 0, 0, 0, hl);
+		move(m[6], b, 0, 0, bi+hl, bj+hl, hl);
 		//p4
 		// G-E goes in m0
-		sub(b, b, m[0], bi + len/2, bj, bi, bj, 0, 0, len/2);
+		sub(b, b, m[0], bi + hl, bj, bi, bj, 0, 0, hl);
 		// multiply goes in m3
-		strassen(a, m[0], m[3], s1, s2, matrices, ai+len/2, aj+len/2, 0, 0, 0, 0, len/2, crossover, depth+1);
+		move(a, m[5], ai+hl, aj+hl, 0, 0, hl);
+		move(m[0], m[6], 0, 0, 0, 0, hl);
+		strassen(a, m[0], m[3], matrices, ai+hl, aj+hl, 0, 0, 0, 0, hl, crossover, depth+1);
+		move(m[5], a, 0, 0, ai+hl, aj+hl, hl);
+		move(m[6], m[0], 0, 0, 0, 0, hl);
 		//now we don't need B or G
 		//p6 moves to B's spot
-		move(m[2], a, 0, 0, ai, aj+len/2, len/2);
+		move(m[2], a, 0, 0, ai, aj+hl, hl);
 		//p2 moves to G's spot
-		move(m[1], b, 0, 0, bi+len/2, bj, len/2);
+		move(m[1], b, 0, 0, bi+hl, bj, hl);
 
 		//p7
 		//A-C goes in m0
-		sub(a, a, m[0], ai, aj, ai+len/2, aj, 0, 0, len/2);
+		sub(a, a, m[0], ai, aj, ai+hl, aj, 0, 0, hl);
 		//E+F goes in m1
-		add(b, b, m[1], bi, bj, bi, bj+len/2, 0, 0, len/2);
+		add(b, b, m[1], bi, bj, bi, bj+hl, 0, 0, hl);
 		//multiply goes in m2
-		strassen(m[0], m[1], m[2], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		move(m[0],m[5],0,0,0,0,hl);
+		move(m[1],m[6],0,0,0,0,hl);
+		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
+		move(m[5],m[0],0,0,0,0,hl);
+		move(m[6],m[1],0,0,0,0,hl);
 		//p1
 		//F-H goes in m0
-		sub(b, b, m[0], bi, bj+len/2, bi+len/2, bj+len/2, 0, 0, len/2);
+		sub(b, b, m[0], bi, bj+hl, bi+hl, bj+hl, 0, 0, hl);
 		// multiply goes in m1
-		strassen(a, m[0], m[1], s1, s2, matrices, ai, aj, 0, 0, 0, 0, len/2, crossover, depth+1);
+		move(a,m[5],ai,aj,0,0,hl);
+		move(m[0],m[6],0,0,0,0,hl);
+		strassen(a, m[0], m[1], matrices, ai, aj, 0, 0, 0, 0, hl, crossover, depth+1);
+		move(m[5],a,0,0,ai,aj,hl);
+		move(m[6],m[0],0,0,0,0,hl);
 		//p3
 		//C+D goes in m0
-		add(a, a, m[0], ai+len/2, aj, ai+len/2, aj+len/2, 0, 0, len/2);
+		add(a, a, m[0], ai+hl, aj, ai+hl, aj+hl, 0, 0, hl);
 		//multiply goes in m4
-		strassen(m[0], b, m[4], s1, s2, matrices, 0, 0, bi, bj, 0, 0, len/2, crossover, depth+1);
+		move(m[0],m[5],0,0,0,0,hl);
+		move(b,m[6],bi,bj,0,0,hl);
+		strassen(m[0], b, m[4], matrices, 0, 0, bi, bj, 0, 0, hl, crossover, depth+1);
+		move(m[5],m[0],0,0,0,0,hl);
+		move(m[6],b,0,0,bi,bj,hl);
 		//now we don't need C or F
 		//p1 goes in C's spot
-		move(m[1], a, 0, 0, ai+len/2, aj, len/2);
+		move(m[1], a, 0, 0, ai+hl, aj, hl);
 		//p3 goes in F's spot
-		move(m[4], b, 0, 0, bi, bj+len/2, len/2);
+		move(m[4], b, 0, 0, bi, bj+hl, hl);
 
 		//p5
 		//A+D goes in m0
-		add(a, a, m[0], ai, aj, ai+len/2, aj+len/2, 0, 0, len/2);
+		add(a, a, m[0], ai, aj, ai+hl, aj+hl, 0, 0, hl);
 		//E+H goes in m1
-		add(b, b, m[1], bi, bj, bi+len/2, bj+len/2, 0, 0, len/2);
+		add(b, b, m[1], bi, bj, bi+hl, bj+hl, 0, 0, hl);
 		//multiply goes in m4
-		strassen(m[0], m[1], m[4], s1, s2, matrices, 0, 0, 0, 0, 0, 0, len/2, crossover, depth+1);
+		move(m[0],m[5],0,0,0,0,hl);
+		move(m[1],m[6],0,0,0,0,hl);
+		strassen(m[0], m[1], m[4], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
+		move(m[5],m[0],0,0,0,0,hl);
+		move(m[6],m[1],0,0,0,0,hl);
 		//p1 is in C's spot
 		//p2 is in G's spot
 		//p3 is in F's spot
@@ -244,38 +279,34 @@ public class MatrixMultiply {
 		//add things and move to c
 		//AE+BG
 		//p5+p6, save in p6
-		add(m[4], a, a, 0, 0, ai, aj+len/2, ai, aj+len/2, len/2);
+		add(m[4], a, a, 0, 0, ai, aj+hl, ai, aj+hl, hl);
 		//subtract p2
-		sub(a, b, a, ai, aj+len/2, bi+len/2, bj, ai, aj+len/2, len/2);
+		sub(a, b, a, ai, aj+hl, bi+hl, bj, ai, aj+hl, hl);
 		//add p4
-		add(a, m[3], c, ai, aj+len/2, 0, 0, ci, cj, len/2);
+		add(a, m[3], c, ai, aj+hl, 0, 0, ci, cj, hl);
 
 		//AF+BH
 		//p1+p2
-		add(a, b, c, ai+len/2, aj, bi+len/2, bj, ci, cj+len/2, len/2);
+		add(a, b, c, ai+hl, aj, bi+hl, bj, ci, cj+hl, hl);
 
 		//CE+DG
 		//p3+p4
-		add(b, m[3], c, bi, bj+len/2, 0, 0, ci+len/2, cj, len/2);
+		add(b, m[3], c, bi, bj+hl, 0, 0, ci+hl, cj, hl);
 
 		//CF+DH
 		//p5+p1, save in p5
-		add(m[4], a, m[4], 0, 0, ai+len/2, aj, 0, 0, len/2);
+		add(m[4], a, m[4], 0, 0, ai+hl, aj, 0, 0, hl);
 		//subtract p3
-		sub(m[4], b, m[4], 0, 0, bi, bj+len/2, 0, 0, len/2);
+		sub(m[4], b, m[4], 0, 0, bi, bj+hl, 0, 0, hl);
 		//subtract p7
-		sub(m[4], m[2], c, 0, 0, 0, 0, ci+len/2, cj+len/2, len/2);
-
-		//restore our arrays
-		move(s1, a, 0, 0, 0, 0, len);
-		move(s2, a, 0, 0, 0, 0, len);
+		sub(m[4], m[2], c, 0, 0, 0, 0, ci+hl, cj+hl, hl);
 	}
 
 	public static int parseInt(String s) {
 		try {
 			return Integer.parseInt(s);
 		} catch (NumberFormatException e) {
-			System.out.println("Error: Incorrect input format.");
+			System.out.println("Error: Incorrect integer format." + " \'" + s + "\'");
 			System.exit(0);
 		}
 		return 0;
