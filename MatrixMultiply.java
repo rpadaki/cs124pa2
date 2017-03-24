@@ -20,7 +20,24 @@ public class MatrixMultiply {
 		// a -- 0 for diagonal, 1 for time
 		// b -- 0 for file, 1 for random
 		// c -- 0 for Strassen, 1 for regular
-		if (flag % 2 == 0) {
+		if (flag == 8) {
+			try{
+			    PrintWriter writer = new PrintWriter(args[4] + ".txt", "UTF-8");
+			    min = parseInt(args[2]);
+			    max = parseInt(args[3]);
+			    randMatrix(n, min, max, a);
+			    for (int i = 0; i < n; i++) {
+			    	for (int j = 0; j < n; j++) {
+			    		writer.println(a[i][j]);
+			    	}
+			    }
+			    writer.close();
+			} catch (IOException e) {
+			   // do something
+			}
+		}
+
+		else if (flag % 2 == 0) {
 			crossover = parseInt(args[2]);
 			if (flag % 4 == 0) {
 				setMatricesFromFile(a,b,n,args[3]);
@@ -232,128 +249,122 @@ public class MatrixMultiply {
 		}
 	}
 
+	// recursive function that calculates the product of a and b and stores it in c using strassen's algorithm
 	public static void strassen(long[][] a, long[][] b, long[][] c, ArrayList<long[][][]> matrices, int ai, int aj, int bi, int bj, int ci, int cj, int len, int crossover, int depth) {
+		// base case of our recursion
 		if (len <= crossover) {
 			regMult(a, b, c, ai, aj, bi, bj, ci, cj, len);
 			return;
 		}
 
-		//depth 0 corresponds to n/2, etc
+		// depth 0 corresponds to n/2, depth 1 to n/4, etc
 		long[][][] m = matrices.get(depth);
-		int hl = len/2;
-		// p6
-		// B - D goes in m0
-		sub(a, a, m[0], ai, aj + hl, ai+hl, aj+hl, 0, 0, hl);
-		// G + H goes in m1
-		add(b, b, m[1], bi+hl, bj, bi+hl, bj+hl, 0, 0, hl);
-		// multiply goes in m2
-		move(m[0], m[5], 0, 0, 0, 0, hl);
-		move(m[1], m[6], 0, 0, 0, 0, hl);
-		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
-		move(m[5], m[0], 0, 0, 0, 0, hl);
-		move(m[6], m[1], 0, 0, 0, 0, hl);
 
-		//p2
-		// A+B goes in m0
+		// half-length
+		int hl = len/2;
+
+		// Calculate helper functions
+		// P6
+		// we put B - D in m[0]
+		sub(a, a, m[0], ai, aj + hl, ai+hl, aj+hl, 0, 0, hl);
+		// we put G + H in m[1]
+		add(b, b, m[1], bi+hl, bj, bi+hl, bj+hl, 0, 0, hl);
+		// we put P6 in m[2]
+		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
+
+		// P2
+		// we put A + B in m[0]
 		add(a, a, m[0], ai, aj, ai, aj + hl, 0, 0, hl);
-		// multiply goes in m1
-		move(m[0], m[5], 0, 0, 0, 0, hl);
-		move(b, m[6], bi+hl, bj+hl, 0, 0, hl);
+		// we put P2 in m[1]
+		// we move H before and after since we will need it in the future
+		move(b, m[5], bi+hl, bj+hl, 0, 0, hl);
 		strassen(m[0], b, m[1], matrices, 0, 0, bi+hl, bj+hl, 0, 0, hl, crossover, depth+1);
-		move(m[5], m[0], 0, 0, 0, 0, hl);
-		move(m[6], b, 0, 0, bi+hl, bj+hl, hl);
-		//p4
-		// G-E goes in m0
+		move(m[5], b, 0, 0, bi+hl, bj+hl, hl);
+
+		// P4
+		// we put G - E in m[0]
 		sub(b, b, m[0], bi + hl, bj, bi, bj, 0, 0, hl);
-		// multiply goes in m3
+		// we put P4 in m[3] and save D for later use
 		move(a, m[5], ai+hl, aj+hl, 0, 0, hl);
-		move(m[0], m[6], 0, 0, 0, 0, hl);
 		strassen(a, m[0], m[3], matrices, ai+hl, aj+hl, 0, 0, 0, 0, hl, crossover, depth+1);
 		move(m[5], a, 0, 0, ai+hl, aj+hl, hl);
-		move(m[6], m[0], 0, 0, 0, 0, hl);
-		//now we don't need B or G
-		//p6 moves to B's spot
+
+		// now we no longer need B or G
+		// we move P6 to B's position
 		move(m[2], a, 0, 0, ai, aj+hl, hl);
-		//p2 moves to G's spot
+		// we move P2 to G's position
 		move(m[1], b, 0, 0, bi+hl, bj, hl);
 
-		//p7
-		//A-C goes in m0
+		// P7
+		// we put A - C in m[0]
 		sub(a, a, m[0], ai, aj, ai+hl, aj, 0, 0, hl);
-		//E+F goes in m1
+		// we put E + F in m[1]
 		add(b, b, m[1], bi, bj, bi, bj+hl, 0, 0, hl);
-		//multiply goes in m2
-		move(m[0],m[5],0,0,0,0,hl);
-		move(m[1],m[6],0,0,0,0,hl);
+		// we put P7 in m[2]
 		strassen(m[0], m[1], m[2], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
-		move(m[5],m[0],0,0,0,0,hl);
-		move(m[6],m[1],0,0,0,0,hl);
-		//p1
-		//F-H goes in m0
+
+		// P1
+		// we put F - H in m[0]
 		sub(b, b, m[0], bi, bj+hl, bi+hl, bj+hl, 0, 0, hl);
-		// multiply goes in m1
+		// we put P1 in m[1] and save A for later use
 		move(a,m[5],ai,aj,0,0,hl);
-		move(m[0],m[6],0,0,0,0,hl);
 		strassen(a, m[0], m[1], matrices, ai, aj, 0, 0, 0, 0, hl, crossover, depth+1);
 		move(m[5],a,0,0,ai,aj,hl);
-		move(m[6],m[0],0,0,0,0,hl);
-		//p3
-		//C+D goes in m0
+
+		// P3
+		// we put C + D in m[0]
 		add(a, a, m[0], ai+hl, aj, ai+hl, aj+hl, 0, 0, hl);
-		//multiply goes in m4
-		move(m[0],m[5],0,0,0,0,hl);
-		move(b,m[6],bi,bj,0,0,hl);
+		// we put P3 in m[4] and save E for later use
+		move(b,m[5],bi,bj,0,0,hl);
 		strassen(m[0], b, m[4], matrices, 0, 0, bi, bj, 0, 0, hl, crossover, depth+1);
-		move(m[5],m[0],0,0,0,0,hl);
-		move(m[6],b,0,0,bi,bj,hl);
-		//now we don't need C or F
-		//p1 goes in C's spot
+		move(m[5],b,0,0,bi,bj,hl);
+
+		// now we no longer need C or F
+		// we move P1 to C's position
 		move(m[1], a, 0, 0, ai+hl, aj, hl);
-		//p3 goes in F's spot
+		// we move P3 to F's position
 		move(m[4], b, 0, 0, bi, bj+hl, hl);
 
-		//p5
-		//A+D goes in m0
+		// P5
+		// we put A + D in m[0]
 		add(a, a, m[0], ai, aj, ai+hl, aj+hl, 0, 0, hl);
-		//E+H goes in m1
+		// we put E + H in m[1]
 		add(b, b, m[1], bi, bj, bi+hl, bj+hl, 0, 0, hl);
-		//multiply goes in m4
-		move(m[0],m[5],0,0,0,0,hl);
-		move(m[1],m[6],0,0,0,0,hl);
+		// we put P5 in m[4]
 		strassen(m[0], m[1], m[4], matrices, 0, 0, 0, 0, 0, 0, hl, crossover, depth+1);
-		move(m[5],m[0],0,0,0,0,hl);
-		move(m[6],m[1],0,0,0,0,hl);
-		//p1 is in C's spot
-		//p2 is in G's spot
-		//p3 is in F's spot
-		//p4 is in m[3]
-		//p5 is in m[4]
-		//p6 is in B's spot
-		//p7 is in m[2]
 
-		//add things and move to c
-		//AE+BG
-		//p5+p6, save in p6
+		// At this point:
+		// P1 is in C's position
+		// P2 is in G's position
+		// P3 is in F's position
+		// P4 is in m[3]
+		// P5 is in m[4]
+		// P6 is in B's position
+		// P7 is in m[2]
+
+		// Calculate the four quadrants of c using our helper functions
+		// AE + BG
+		// we add P5 + P6 and save the result in P6
 		add(m[4], a, a, 0, 0, ai, aj+hl, ai, aj+hl, hl);
-		//subtract p2
+		// we subtract P2
 		sub(a, b, a, ai, aj+hl, bi+hl, bj, ai, aj+hl, hl);
-		//add p4
+		// we add P4 and put the final result in c
 		add(a, m[3], c, ai, aj+hl, 0, 0, ci, cj, hl);
 
-		//AF+BH
-		//p1+p2
+		// AF + BH
+		// we add P1 + P2 and put the result in c
 		add(a, b, c, ai+hl, aj, bi+hl, bj, ci, cj+hl, hl);
 
-		//CE+DG
-		//p3+p4
+		// CE + DG
+		//we add P3 + P4 and put the result in c
 		add(b, m[3], c, bi, bj+hl, 0, 0, ci+hl, cj, hl);
 
-		//CF+DH
-		//p5+p1, save in p5
+		// CF + DH
+		// we add P5 + P1 and save the result in P5
 		add(m[4], a, m[4], 0, 0, ai+hl, aj, 0, 0, hl);
-		//subtract p3
+		// we subtract P3
 		sub(m[4], b, m[4], 0, 0, bi, bj+hl, 0, 0, hl);
-		//subtract p7
+		// we subtract P7 and put the final result in c
 		sub(m[4], m[2], c, 0, 0, 0, 0, ci+hl, cj+hl, hl);
 	}
 
