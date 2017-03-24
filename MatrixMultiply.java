@@ -11,65 +11,73 @@ public class MatrixMultiply {
 		// Initialize crossover
 		int crossover;
 
-		// Testing to make sure that
-		// padding was working as desired
-		if (flag == 3) {
+		// Initialize matrices
+		long[][] a = new long[n][n];
+		long[][] b = new long[n][n];
+		long[] diag = new long[n];
+
+		// Let flag be abc in binary.
+		// a -- 0 for diagonal, 1 for time
+		// b -- 0 for file, 1 for random
+		// c -- 0 for Strassen, 1 for regular
+		if (flag % 2 == 0) {
 			crossover = parseInt(args[2]);
-			System.out.println(pad(n,crossover));
-			return;
-		}
-
-		// We set the crossover here.
-		crossover = 15;
-
-		// Manually set crossover for testing
-		// with random matrices.
-		if (flag == 4) {
-			crossover = parseInt(args[4]);
-		}
-		if (flag == 5) {
-			crossover = parseInt(args[3]);
-		}
-		for (crossover = 8; crossover < 1025; crossover += 1) {
-			long total = 0;
-			for (int k = 0; k < 1; k++) {
-				total += timeMultiply(flag, n, crossover, args);
+			if (flag % 4 == 0) {
+				setMatricesFromFile(a,b,n,args[3]);
 			}
-			System.out.println(crossover + " " + total);
+			else {
+				int min = parseInt(args[3]);
+				int max = parseInt(args[4]);
+				randMatrix(n,min,max,a);
+				randMatrix(n,min,max,b);	
+			}
+			if (flag < 4) {
+				for (long i : diagStrassen(n,crossover,a,b)) {
+					System.out.println(i);
+				}	
+			}
+			else {
+				System.out.println(timeStrassen(n,crossover,a,b));
+			}
+		}
+		else {
+			if (flag % 4 == 1) {
+				setMatricesFromFile(a,b,n,args[2]);
+			}
+			else {
+				int min = parseInt(args[2]);
+				int max = parseInt(args[3]);
+				randMatrix(n,min,max,a);
+				randMatrix(n,min,max,b);	
+			}
+			if (flag < 4) {
+				for (long i : diagRegular(n,a,b)) {
+					System.out.println(i);
+				}	
+			}
+			else {
+				System.out.println(timeRegular(n,a,b));
+			}
 		}
 	}
 
-	public static long timeMultiply(int flag, int n, int crossover, String[] args) {
-		// Determine buffer
+	public static long timeStrassen(int n, int crossover, long[][] a1, long[][] b1) {
+		//Determine buffer
 		int m = pad(n,crossover);
 
-		// Initialize matrices
+		// Initialize padded matrices
 		long[][] a = new long[m][m];
 		long[][] b = new long[m][m];
-
-		// Get matrices from input file
-		if (flag == 0 || flag == 5) {
-			// Input filename
-			String inputfile = args[2];
-			setMatricesFromFile(a,b,n,inputfile);
-		}
-		// Randomly generate matrices
-		else if (flag == 1 || flag == 4) {
-			int min = parseInt(args[2]);
-			int max = parseInt(args[3]);
-			randMatrix(n,min,max,a);
-			randMatrix(n,min,max,b);
-		}
-		// Fill in the rest of a and b with
-		// 1s on the diagonal. This makes
-		// multiplication of padded matrices
-		// work as desired.
-		for (int i = n; i < m; i++) {
-			a[i][i] = 1;
-			b[i][i] = 1;
-		}
-
 		long[][] c = new long[m][m];
+
+		// Fill in the padded matrices with
+		// a1 and b1.
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				a[i][j] = a1[i][j];
+				b[i][j] = b1[i][j];
+			}
+		}
 
 		ArrayList<long[][][]> matrices = new ArrayList<long[][][]>();
 		makeMatrices(matrices, m, crossover);
@@ -77,6 +85,53 @@ public class MatrixMultiply {
 		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
 		long end = System.currentTimeMillis();
 		return end-start;
+	}
+
+	public static long timeRegular(int n, long[][] a, long[][] b) {
+		long[][] c = new long[n][n];
+		long start = System.currentTimeMillis();
+		regMult(a, b, c, 0, 0, 0, 0, 0, 0, n);
+		long end = System.currentTimeMillis();
+		return end-start;
+	}
+
+	public static long[] diagStrassen(int n, int crossover, long[][] a1, long[][] b1) {
+		//Determine buffer
+		int m = pad(n,crossover);
+
+		// Initialize padded matrices
+		long[][] a = new long[m][m];
+		long[][] b = new long[m][m];
+		long[][] c = new long[m][m];
+		long[] out = new long[n];
+
+		// Fill in the padded matrices with
+		// a1 and b1.
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				a[i][j] = a1[i][j];
+				b[i][j] = b1[i][j];
+			}
+		}
+
+		ArrayList<long[][][]> matrices = new ArrayList<long[][][]>();
+		makeMatrices(matrices, m, crossover);
+		strassen(a, b, c, matrices, 0, 0, 0, 0, 0, 0, m, crossover, 0);
+		for (int i = 0; i < n; i++) {
+			out[i] = c[i][i];
+		}
+		return out;
+	}
+
+
+	public static long[] diagRegular(int n, long[][] a, long[][] b) {
+		long[][] c = new long[n][n];
+		long[] out = new long[n];
+		regMult(a, b, c, 0, 0, 0, 0, 0, 0, n);
+		for (int i = 0; i < n; i++) {
+			out[i] = c[i][i];
+		}
+		return out;
 	}
 
 	public static void setMatricesFromFile(long[][] a, long[][] b, int n, String inputfile) {
