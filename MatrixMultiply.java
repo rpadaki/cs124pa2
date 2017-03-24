@@ -218,7 +218,7 @@ public class MatrixMultiply {
 		if (len <= crossover) {
 			return;
 		}
-		matrices.add(new long[7][len/2][len/2]);
+		matrices.add(new long[6][len/2][len/2]);
 		makeMatrices(matrices, len/2, crossover);
 	}
 
