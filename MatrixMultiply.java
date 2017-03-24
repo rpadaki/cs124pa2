@@ -20,7 +20,24 @@ public class MatrixMultiply {
 		// a -- 0 for diagonal, 1 for time
 		// b -- 0 for file, 1 for random
 		// c -- 0 for Strassen, 1 for regular
-		if (flag % 2 == 0) {
+		if (flag == 8) {
+			try{
+			    PrintWriter writer = new PrintWriter(args[4] + ".txt", "UTF-8");
+			    min = parseInt(args[2]);
+			    max = parseInt(args[3]);
+			    randMatrix(n, min, max, a);
+			    for (int i = 0; i < n; i++) {
+			    	for (int j = 0; j < n; j++) {
+			    		writer.println(a[i][j]);
+			    	}
+			    }
+			    writer.close();
+			} catch (IOException e) {
+			   // do something
+			}
+		}
+
+		else if (flag % 2 == 0) {
 			crossover = parseInt(args[2]);
 			if (flag % 4 == 0) {
 				setMatricesFromFile(a,b,n,args[3]);
