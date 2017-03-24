@@ -20,23 +20,41 @@ public class MatrixMultiply {
 		// a -- 0 for diagonal, 1 for time
 		// b -- 0 for file, 1 for random
 		// c -- 0 for Strassen, 1 for regular
+		// flag 8 for storing random matrix in file
+		// flag 9 for checking diagonal on file input
 		if (flag == 8) {
 			try{
-			    PrintWriter writer = new PrintWriter(args[4] + ".txt", "UTF-8");
-			    min = parseInt(args[2]);
-			    max = parseInt(args[3]);
-			    randMatrix(n, min, max, a);
-			    for (int i = 0; i < n; i++) {
+				PrintWriter writer = new PrintWriter(args[4]);
+				int min = parseInt(args[2]);
+				int max = parseInt(args[3]);
+				randMatrix(n, min, max, a);
+				randMatrix(n, min, max, b);
+				for (int i = 0; i < n; i++) {
 			    	for (int j = 0; j < n; j++) {
 			    		writer.println(a[i][j]);
+			    		writer.println(b[i][j]);
 			    	}
 			    }
 			    writer.close();
 			} catch (IOException e) {
-			   // do something
+				System.out.println("Error: Invalid output file.");
+				System.exit(0);
 			}
 		}
-
+		else if (flag == 9) {
+			crossover = parseInt(args[2]);
+			setMatricesFromFile(a,b,n,args[3]);
+			diag = diagRegular(n,a,b);
+			long[] strassenDiag = diagStrassen(n,crossover,a,b);
+			Boolean correct = true;
+			for (int i = 0; i < n; i++) {
+				correct = (diag[i] == strassenDiag[i]);
+				if (!correct) break;
+			}
+			System.out.print("Strassen ");
+			if (!correct) System.out.print("in");
+			System.out.println("correct!");
+		}
 		else if (flag % 2 == 0) {
 			crossover = parseInt(args[2]);
 			if (flag % 4 == 0) {
